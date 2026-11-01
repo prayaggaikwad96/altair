@@ -152,7 +152,7 @@ jobs:
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@d33c176a9b784876d966f80fb1b461808edc0641 # v2.1.1
-        if: startsWith(matrix.os, 'ubuntu')
+        if: ${{ inputs.publish && startsWith(matrix.os, 'ubuntu') }}
         env:
           SNAPCRAFT_TOKEN: ${{ secrets.snapcraft_store_credentials }}
 
