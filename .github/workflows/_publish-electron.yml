@@ -168,6 +168,7 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         continue-on-error: true
       - name: Install flathub repo
+        if: ${{ inputs.publish && startsWith(matrix.os, 'ubuntu') }}
         continue-on-error: true
         # Need to install flatpak dependencies manually
         # https://github.com/electron/forge/issues/2662#issuecomment-1003900006
