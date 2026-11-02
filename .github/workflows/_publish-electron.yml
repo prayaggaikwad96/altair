@@ -165,7 +165,7 @@ jobs:
 
       - name: Install flatpak and flatpak-builder
         run: sudo apt-get install -y flatpak flatpak-builder elfutils
-        if: startsWith(matrix.os, 'ubuntu')
+        if: ${{ inputs.publish && startsWith(matrix.os, 'ubuntu') }}
         continue-on-error: true
       - name: Install flathub repo
         if: ${{ inputs.publish && startsWith(matrix.os, 'ubuntu') }}
