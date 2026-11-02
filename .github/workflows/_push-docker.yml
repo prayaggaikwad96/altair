@@ -87,8 +87,18 @@ jobs:
                 "containerd-snapshotter": true
               }
             }
-      - name: Login to Docker Hub
+      - name: Check Docker Hub credentials
+        id: dockerhub-credentials
         if: ${{ inputs.push }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.dockerhub_username }}
+          DOCKERHUB_TOKEN: ${{ secrets.dockerhub_token }}
+        run: |
+          if [[ -n "$DOCKERHUB_USERNAME" && -n "$DOCKERHUB_TOKEN" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Login to Docker Hub
+        if: ${{ inputs.push && steps.dockerhub-credentials.outputs.available == 'true' }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.dockerhub_username }}
@@ -109,7 +119,7 @@ jobs:
           provenance: true
           push: ${{ inputs.push }}
           tags: |
-            ${{ inputs.push && inputs.release && format('{0}/altairgraphqlapi:latest', secrets.dockerhub_username) || '' }}
-            ${{ inputs.push && inputs.version && format('{0}/altairgraphqlapi:{1}{2}', secrets.dockerhub_username, inputs.version, inputs.release && '-release' || '') || '' }}
+            ${{ inputs.push && steps.dockerhub-credentials.outputs.available == 'true' && inputs.release && format('{0}/altairgraphqlapi:latest', secrets.dockerhub_username) || '' }}
+            ${{ inputs.push && steps.dockerhub-credentials.outputs.available == 'true' && inputs.version && format('{0}/altairgraphqlapi:{1}{2}', secrets.dockerhub_username, inputs.version, inputs.release && '-release' || '') || '' }}
             ${{ inputs.push && inputs.release && format('ghcr.io/{0}/altairgraphqlapi:latest', github.repository_owner) || '' }}
             ${{ inputs.push && inputs.version && format('ghcr.io/{0}/altairgraphqlapi:{1}{2}', github.repository_owner, inputs.version, inputs.release && '-release' || '') || '' }}
