@@ -19,11 +19,11 @@ on:
         type: string
     secrets:
       dockerhub_username:
-        description: "Docker Hub username"
-        required: true
+        description: "Docker Hub username; only required when push is enabled"
+        required: false
       dockerhub_token:
-        description: "Docker Hub token"
-        required: true
+        description: "Docker Hub token; only required when push is enabled"
+        required: false
   workflow_dispatch:
     inputs:
       push:
@@ -88,7 +88,7 @@ jobs:
               }
             }
       - name: Login to Docker Hub
-        if: ${{ inputs.push && secrets.dockerhub_username != '' && secrets.dockerhub_token != '' }}
+        if: ${{ inputs.push }}
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           username: ${{ secrets.dockerhub_username }}
