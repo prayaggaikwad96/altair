@@ -106,6 +106,7 @@ jobs:
       publish: ${{ needs.vars.outputs.type == 'master' || needs.vars.outputs.type == 'release' }}
       production: ${{ needs.vars.outputs.type == 'release' }}
     secrets:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
       apple_api_key: ${{ secrets.apple_api_key }}
       apple_api_key_id: ${{ secrets.apple_api_key_id }}
       apple_id: ${{ secrets.apple_id }}
