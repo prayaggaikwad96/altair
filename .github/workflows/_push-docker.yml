@@ -46,22 +46,33 @@ permissions: {}
 jobs:
   docker-vars:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
-      version: ${{ inputs.version || format('{0}-{1}', github.sha, env.COMMIT_TIMESTAMP) }}
+      version: ${{ inputs.version || format('{0}-{1}', github.sha, steps.commit-timestamp.outputs.timestamp) }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
-      - name: Get Git commit timestamps
-        run: echo "COMMIT_TIMESTAMP=$(git log -1 --pretty=%ct)" >> $GITHUB_ENV
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Get Git commit timestamp
+        id: commit-timestamp
+        run: echo "timestamp=$(git log -1 --pretty=%ct)" >> "$GITHUB_OUTPUT"
       - run: echo "Exposing env vars"
+
   docker:
+    needs: [docker-vars]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    env:
+      IMAGE_VERSION: ${{ inputs.version || needs.docker-vars.outputs.version }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
@@ -122,6 +133,6 @@ jobs:
           push: ${{ inputs.push }}
           tags: |
             ${{ inputs.push && inputs.release && format('{0}/altairgraphqlapi:latest', secrets.dockerhub_username) || '' }}
-            ${{ inputs.push && inputs.version && format('{0}/altairgraphqlapi:{1}{2}', secrets.dockerhub_username, inputs.version, inputs.release && '-release' || '') || '' }}
+            ${{ inputs.push && env.IMAGE_VERSION && format('{0}/altairgraphqlapi:{1}{2}', secrets.dockerhub_username, env.IMAGE_VERSION, inputs.release && '-release' || '') || '' }}
             ${{ inputs.push && inputs.release && format('ghcr.io/{0}/altairgraphqlapi:latest', github.repository_owner) || '' }}
-            ${{ inputs.push && inputs.version && format('ghcr.io/{0}/altairgraphqlapi:{1}{2}', github.repository_owner, inputs.version, inputs.release && '-release' || '') || '' }}
+            ${{ inputs.push && env.IMAGE_VERSION && format('ghcr.io/{0}/altairgraphqlapi:{1}{2}', github.repository_owner, env.IMAGE_VERSION, inputs.release && '-release' || '') || '' }}
