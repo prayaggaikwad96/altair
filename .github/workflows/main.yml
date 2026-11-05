@@ -91,6 +91,7 @@ jobs:
       release: ${{ needs.vars.outputs.type == 'release' }}
       version: ${{ needs.prepare-release.outputs.release-tag || github.sha }}-${{ github.run_number }}
     secrets:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
       dockerhub_username: ${{ secrets.dockerhub_username }}
       dockerhub_token: ${{ secrets.dockerhub_token }}
 
