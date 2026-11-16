@@ -28,6 +28,9 @@ on:
         default: false
         type: boolean
     secrets:
+      github_token:
+        description: "GitHub token for publishing Electron release artifacts"
+        required: false
       apple_api_key:
         description: "Apple API key for macOS notarization"
         required: true
@@ -165,7 +168,7 @@ jobs:
 
       - name: Install flatpak and flatpak-builder
         run: sudo apt-get install -y flatpak flatpak-builder elfutils
-        if: startsWith(matrix.os, 'ubuntu')
+        if: ${{ inputs.publish && startsWith(matrix.os, 'ubuntu') }}
         continue-on-error: true
       - name: Install flathub repo
         if: ${{ inputs.publish && startsWith(matrix.os, 'ubuntu') }}
@@ -177,21 +180,20 @@ jobs:
           sudo flatpak install org.freedesktop.Sdk/x86_64/23.08 -y
           sudo flatpak install org.freedesktop.Platform/x86_64/23.08 -y
           sudo flatpak install org.electronjs.Electron2.BaseApp/x86_64/23.08 -y
-        if: startsWith(matrix.os, 'ubuntu')
 
       - name: Build/release Electron app
         id: build-electron
         if: ${{ inputs.build }}
         uses: paneron/action-electron-builder@14b133702d1b2e9749912051c43ed62b4afe56c8 # v1.8.1
         with:
-          github_token: ${{ secrets.github_token }}
+          github_token: ${{ secrets.github_token || secrets.GITHUB_TOKEN }}
           package_root: out/elx-files/
           skip_build: true
           skip_package_manager_install: true
           # Only supply signing certs on macOS builds.
           mac_certs: ${{ secrets.mac_certs }}
           mac_certs_password: ${{ secrets.mac_certs_password }}
-          args: --publish always --config electron-builder.config.ts
+          args: ${{ inputs.publish && '--publish always' || '--publish never' }} --config electron-builder.config.ts
           max_attempts: 3
           package_manager: pnpm
         env:
